@@ -1,0 +1,19 @@
+@{
+    ViewData["Title"] = "Signing in";
+}
+
+<h2 align="center">Signing in</h2><br>
+
+@if (ViewBag.Error != null) {
+    <p style="color: red; text-align: center;">@ViewBag.Error</p>
+}
+
+<div style="display: flex; justify-content: center; align-items: center;">
+    <form style="text-align: left;" method="post" asp-action="Login">
+        <label for="provided_login">Login:</label><br>
+        <input type="text" itemref="provided_login" name="provided_login"/><br><br>
+        <label for="provided_password">Password:</label><br>
+        <input type="text" itemref="provided_password" name="provided_password"/><br><br>
+        <input align="center" type="submit" value="Submit"/>
+    </form>
+</div>

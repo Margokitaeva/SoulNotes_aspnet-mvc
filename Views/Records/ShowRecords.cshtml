@@ -1,0 +1,132 @@
+@{
+    ViewData["Title"] = "Records";
+}
+
+@model SoulNotes.Models.Records
+
+<style>
+    .records-page label {
+        font-family: 'Comic Sans MS', 'Courier New', cursive;
+        font-weight: bold;
+        display: block;
+        margin-top: 10;
+    }
+
+    .records-page .scroll-box {
+        display: flex;
+        gap: 10px;
+    }
+
+    .records-page .records-scroll-box {
+        flex-wrap: wrap;
+    }
+
+    .records-page .emotions-tags-scroll-box {
+        overflow-x: auto;
+        margin: 8px 0;
+    }
+
+    .records-page button {
+        font-family: 'Comic Sans MS', cursive;
+        font-size: 16px;
+        padding: 8px 20px;
+        cursor: pointer;
+    }
+
+    .records-page .selected {
+        outline: 2px solid black;
+    }
+
+    .emotions-tags-page .tag, .emotion {
+        padding: 6px 10px;
+        border-radius: 15px;
+        white-space: nowrap;
+        font-family: 'Comic Sans MS','Courier New', cursive;
+        cursor: pointer;
+        border: 1px solid black;
+    }
+
+
+</style>
+
+<div class="records-page">
+    @* @if (ViewData["Debug"] != null)
+    {
+        <div style="background-color: #f0f0f0; padding: 10px; border: 1px dashed gray; margin-bottom: 20px;">
+            @Html.Raw(ViewData["Debug"])
+        </div>
+    } *@
+    <h2 style="font-family: 'Comic Sans MS', cursive;">My records</h2>
+
+    <form asp-action="ShowRecords" method="post" id="records">
+        @if (Model.AllRecords.Count == 0) {
+            <label>Ooops, seems, there are no records so far, you can <a href="/Diary/DiaryMain">add your first</a></label>
+        } else {
+            <div class="records-scroll-box" id="recordsBox">
+                @foreach (var record in Model.AllRecords) {
+                    var fullText = record.Description;
+                    var firstSentence = fullText.Split(".").FirstOrDefault()?.Trim();
+
+                    string shortText;
+                    if (!string.IsNullOrWhiteSpace(firstSentence)) 
+                        shortText = firstSentence;
+                    else {
+                        var words = fullText.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                        shortText = string.Join(" ", words.Take(10));
+                    }
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
+                        <span>@record.Title</span>
+                        <div>
+                            <button>Edit</button>
+                            <button>Delete</button>
+                        </div>
+                    </div>
+                    
+                    <label>@shortText</label>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
+                        <span>Primary emotion:</span>
+                        @if (Model.EmotionMap.TryGetValue(record.PrimaryEmotionId, out var primaryEmotion)) {
+                            <div class="emotion" style="background-color: @primaryEmotion.Color">
+                                #@primaryEmotion.Name
+                            </div>
+                        }    
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
+                        <span>Emotions:</span>
+                        <div class="emotions-tags-scroll-box" id="emotionsBox">
+                            @foreach (var emotionId in record.SelectedEmotionsIds) {
+                                if (Model.EmotionMap.TryGetValue(emotionId, out var emotion)) {
+                                    <div class="emotion" style="background-color: @emotion.Color">
+                                        #@emotion.Name
+                                    </div>
+                                }    
+                            }
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
+                        <span>Tags:</span>
+                        <div class="emotions-tags-scroll-box" id="tagsBox">
+                            @foreach (var tagId in record.SelectedTagsIds) {
+                                if (Model.TagMap.TryGetValue(tagId, out var tag)) {
+                                    <div class="emotion">
+                                        #@tag.Name
+                                    </div>
+                                }    
+                            }
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
+                        <span>@record.RecordDate</span>
+                        <div>
+                            <button>View</button>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </form>
+</div>
