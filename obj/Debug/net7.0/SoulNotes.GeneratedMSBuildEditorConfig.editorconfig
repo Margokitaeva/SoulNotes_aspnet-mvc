@@ -20,6 +20,10 @@ build_property._RazorSourceGeneratorDebug =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxMb2dJbi5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/AGH/Przedmioty/4_semestr/Programowanie_zaawansowane/lab10_11/SoulNotes/Views/Admin/UserManagement.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cVXNlck1hbmFnZW1lbnQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/AGH/Przedmioty/4_semestr/Programowanie_zaawansowane/lab10_11/SoulNotes/Views/Diary/DiaryMain.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRGlhcnlcRGlhcnlNYWluLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
@@ -46,6 +50,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [D:/AGH/Przedmioty/4_semestr/Programowanie_zaawansowane/lab10_11/SoulNotes/Views/Shared/_ValidationScriptsPartial.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/AGH/Przedmioty/4_semestr/Programowanie_zaawansowane/lab10_11/SoulNotes/Views/Statistics/ShowStatistics.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU3RhdGlzdGljc1xTaG93U3RhdGlzdGljcy5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/AGH/Przedmioty/4_semestr/Programowanie_zaawansowane/lab10_11/SoulNotes/Views/_ViewImports.cshtml]

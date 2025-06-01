@@ -30,11 +30,20 @@
                                 <a class="nav-link text-dark" asp-controller="Diary" asp-action="DiaryMain">Diary</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="EmotionsTagsPage" asp-action="EmotionsTags">Emotions &amp; Tags</a>
-                            </li>
-                            <li class="nav-item">
                                 <a class="nav-link text-dark" asp-controller="Records" asp-action="ShowRecords">Records</a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Statistics" asp-action="ShowStatistics">Statistics</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="EmotionsTagsPage" asp-action="EmotionsTags">Emotions &amp; Tags</a>
+                            </li>
+                            @if (Context.Session.GetInt32("UserId") != null && DataBaseService.IsUserAdmin(Context.Session.GetInt32("UserId").Value)) {
+                                <li>
+                                    <a class="nav-link text-dark" asp-controller="Admin" asp-action="UserManagement">Users</a>
+                                    @* <a href="/Admin/UserManagement">User</a></li> *@
+                                </li>
+                            }
                             <li class="nav-item">
                                 <form asp-controller="Account" asp-action="Logout" method="post" class="form-inline">
                                     <button class="nav-link btn btn-link text-dark" style="border: none; background: none;">Log out</button>

@@ -24,7 +24,8 @@ public static class DataBaseService
             CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             login TEXT NOT NULL,
-            password TEXT NOT NULL
+            password TEXT NOT NULL,
+            isAdmin INTEGER DEFAULT 0
             );";
         cmd.ExecuteNonQuery();
 
@@ -51,7 +52,7 @@ public static class DataBaseService
             moodEntryId INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             userId INT NOT NULL ,
-            date TEXT NOT NULL,
+            recordDate TEXT NOT NULL,
             description TEXT,
             primaryEmotionId INTEGER NOT NULL,
             FOREIGN KEY (userId) REFERENCES users(id),
@@ -86,6 +87,11 @@ public static class DataBaseService
             string hashedPassword = ComputeMD5Hash("Mercy");
             cmd.CommandText = "INSERT INTO users (login, password) VALUES ('Playlist', $password);";
             cmd.Parameters.AddWithValue("$password", hashedPassword);
+            cmd.ExecuteNonQuery();
+            cmd.Parameters.Clear();
+
+            cmd.CommandText = "INSERT INTO users (login, password, isAdmin) VALUES ('admin', $password, 1);";
+            cmd.Parameters.AddWithValue("$password", ComputeMD5Hash("admin"));
             cmd.ExecuteNonQuery();
             cmd.Parameters.Clear();
 
@@ -186,32 +192,32 @@ public static class DataBaseService
         using var connection = new SqliteConnection(connectionString);
         connection.Open();
 
-        var cmd = connection.CreateCommand();
-        cmd.CommandText = "SELECT name, date, description, primaryEmotionId FROM moodEntries WHERE userId = $userId AND moodEntryId = $formId";
-        cmd.Parameters.AddWithValue("$userId", userId);
-        cmd.Parameters.AddWithValue("formId", formId);
-        using var reader = cmd.ExecuteReader();
-        while (reader.Read())
+        var cmd1 = connection.CreateCommand();
+        cmd1.CommandText = "SELECT name, recordDate, description, primaryEmotionId FROM moodEntries WHERE userId = $userId AND moodEntryId = $formId";
+        cmd1.Parameters.AddWithValue("$userId", userId);
+        cmd1.Parameters.AddWithValue("formId", formId);
+        using var reader1 = cmd1.ExecuteReader();
+        while (reader1.Read())
         {
-            form.Title = reader.GetString(0);
-            form.Description = reader.GetString(2);
-            form.PrimaryEmotionId = reader.GetInt32(3);
-            form.RecordDate = reader.GetDateTime(1);
+            form.Title = reader1.GetString(0);
+            form.Description = reader1.GetString(2);
+            form.PrimaryEmotionId = reader1.GetInt32(3);
+            form.RecordDate = reader1.GetDateTime(1);
         }
 
-        cmd.Parameters.Clear();
-        cmd.CommandText = "SELECT emotionId from emotionEntries WHERE moodEntryId = $formId";
-        cmd.Parameters.AddWithValue("$formId", formId);
-        using var reader2 = cmd.ExecuteReader();
+        var cmd2 = connection.CreateCommand();
+        cmd2.CommandText = "SELECT emotionId from emotionEntries WHERE moodEntryId = $formId";
+        cmd2.Parameters.AddWithValue("$formId", formId);
+        using var reader2 = cmd2.ExecuteReader();
         while (reader2.Read())
         {
             form.SelectedEmotionsIds.Add(reader2.GetInt32(0));
         }
 
-        cmd.Parameters.Clear();
-        cmd.CommandText = "SELECT tagId from emotionEntries WHERE moodEntryId = $formId";
-        cmd.Parameters.AddWithValue("$formId", formId);
-        using var reader3 = cmd.ExecuteReader();
+        var cmd3 = connection.CreateCommand();
+        cmd3.CommandText = "SELECT tagId from tagEntries WHERE moodEntryId = $formId";
+        cmd3.Parameters.AddWithValue("$formId", formId);
+        using var reader3 = cmd3.ExecuteReader();
         while (reader3.Read())
         {
             form.SelectedTagsIds.Add(reader3.GetInt32(0));
@@ -301,13 +307,13 @@ public static class DataBaseService
 
         var cmd = connection.CreateCommand();
         cmd.CommandText = @"
-            INSERT INTO moodEntries (name, userId, date, description, primaryEmotionId)
+            INSERT INTO moodEntries (name, userId, recordDate, description, primaryEmotionId)
             VALUES ($title, $userId, $date, $desc, $primaryEmotionId);
         ";
         cmd.Parameters.AddWithValue("$title", title);
         cmd.Parameters.AddWithValue("$userId", userId);
         cmd.Parameters.AddWithValue("$date", recordDate.ToString("yyyy-MM-dd"));
-        cmd.Parameters.AddWithValue("$desc", description);
+        cmd.Parameters.AddWithValue("$desc", description ?? "");
         cmd.Parameters.AddWithValue("$primaryEmotionId", primaryEmotionId);
         cmd.ExecuteNonQuery();
 
@@ -381,7 +387,7 @@ public static class DataBaseService
         connection.Open();
 
         var cmd = connection.CreateCommand();
-        cmd.CommandText = "SELECT moodEntryId, name, date, description, primaryEmotionId FROM moodEntries WHERE userId = $userId";
+        cmd.CommandText = "SELECT moodEntryId, name, recordDate, description, primaryEmotionId FROM moodEntries WHERE userId = $userId";
         cmd.Parameters.AddWithValue("$userId", userId);
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
@@ -423,6 +429,258 @@ public static class DataBaseService
         }
         return records;
     }
+
+    public static bool IsUserAdmin(int userId)
+    {
+        using var connection = new SqliteConnection(connectionString);
+        connection.Open();
+
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT isAdmin FROM users WHERE id = $userId;";
+        cmd.Parameters.AddWithValue("$userId", userId);
+
+        using var reader = cmd.ExecuteReader();
+        if (reader.Read())
+        {
+            return reader.GetInt32(0) == 1;
+        }
+
+        return false;
+    }
+
+    public static void CreateUser(string login, string password)
+    {
+        using var connection = new SqliteConnection(connectionString);
+        connection.Open();
+
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = "INSERT INTO users (login, password) VALUES ($login, $password);";
+        cmd.Parameters.AddWithValue("$login", login);
+        cmd.Parameters.AddWithValue("$password", ComputeMD5Hash(password));
+        cmd.ExecuteNonQuery();
+    }
+
+    public static List<string> GetAllUsers()
+    {
+        var users = new List<string>();
+
+        using var connection = new SqliteConnection(connectionString);
+        connection.Open();
+
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT login FROM users";
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            string login = reader.GetString(0);
+            users.Add(login);
+        }
+
+        return users;
+    }
+
+    public static int ExecuteCount(SqliteConnection conn, int userId, DateTime? start, DateTime? end)
+    {
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT COUNT(*) FROM moodEntries WHERE userId = $uid";
+        cmd.Parameters.AddWithValue("$uid", userId);
+        if (start != null)
+        {
+            cmd.CommandText += " AND recordDate >= $start";
+            cmd.Parameters.AddWithValue("$start", start.Value.ToString("s"));
+        }
+        if (end != null)
+        {
+            cmd.CommandText += " AND recordDate <= $end";
+            cmd.Parameters.AddWithValue("$end", end.Value.ToString("s"));
+        }
+
+        return Convert.ToInt32(cmd.ExecuteScalar());
+    }
+
+    public static Dictionary<string, int> GetEmotionFrequency(SqliteConnection conn, int userId) {
+        var result = new Dictionary<string, int>();
+
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = @"
+            SELECT e.name, COUNT(*) as count
+            FROM emotionEntries ee
+            JOIN emotions e ON ee.emotionId = e.emotionId
+            JOIN moodEntries m ON ee.moodEntryId = m.moodEntryId
+            WHERE m.userId = $uid
+            GROUP BY e.name
+            ORDER BY count DESC";
+        cmd.Parameters.AddWithValue("$uid", userId);
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            string name = reader.GetString(0);
+            int count = reader.GetInt32(1);
+            result[name] = count;
+        }
+
+        return result;
+    }
+
+    public static string GetTopEmotion(SqliteConnection conn, int userId, DateTime from, DateTime to) {
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = @"
+            SELECT e.name, COUNT(*) as count
+            FROM emotionEntries ee
+            JOIN emotions e ON ee.emotionId = e.emotionId
+            JOIN moodEntries m ON ee.moodEntryId = m.moodEntryId
+            WHERE m.userId = $uid AND m.recordDate BETWEEN $from AND $to
+            GROUP BY e.name
+            ORDER BY count DESC
+            LIMIT 1";
+        cmd.Parameters.AddWithValue("$uid", userId);
+        cmd.Parameters.AddWithValue("$from", from.ToString("s"));
+        cmd.Parameters.AddWithValue("$to", to.ToString("s"));
+
+        using var reader = cmd.ExecuteReader();
+        return reader.Read() ? reader.GetString(0) : "-";
+    }
+    
+    public static List<Emotion> GetTopEmotions(SqliteConnection conn, int userId, int limit)
+    {
+        var result = new List<Emotion>();
+
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = @"
+            SELECT e.emotionId, e.name, e.color
+            FROM emotionEntries ee
+            JOIN emotions e ON ee.emotionId = e.emotionId
+            JOIN moodEntries m ON ee.moodEntryId = m.moodEntryId
+            WHERE m.userId = $uid
+            GROUP BY e.emotionId, e.name, e.color
+            ORDER BY COUNT(*) DESC
+            LIMIT $limit";
+        cmd.Parameters.AddWithValue("$uid", userId);
+        cmd.Parameters.AddWithValue("$limit", limit);
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            result.Add(new Emotion
+            {
+                EmotionId = reader.GetInt32(0),
+                Name = reader.GetString(1),
+                Color = reader.GetString(2),
+                UserId = userId
+            });
+        }
+
+        return result;
+    }
+
+    public static List<Tag> GetTopTags(SqliteConnection conn, int userId, int limit)
+    {
+        var result = new List<Tag>();
+
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = @"
+            SELECT t.tagId, t.name, t.userId, COUNT(*) as count
+            FROM tagEntries te
+            JOIN tags t ON te.tagId = t.tagId
+            JOIN moodEntries m ON te.moodEntryId = m.moodEntryId
+            WHERE m.userId = $uid
+            GROUP BY t.tagId, t.name, t.userId
+            ORDER BY count DESC
+            LIMIT $limit";
+        cmd.Parameters.AddWithValue("$uid", userId);
+        cmd.Parameters.AddWithValue("$limit", limit);
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            result.Add(new Tag
+            {
+                TagId = reader.GetInt32(0),
+                Name = reader.GetString(1),
+                UserId = reader.IsDBNull(2) ? -1 : reader.GetInt32(2)
+            });
+        }
+
+        return result;
+    }
+
+    public static Dictionary<Emotion, List<Tag>> GetEmotionTagCorrelation(SqliteConnection conn, int userId)
+    {
+        var result = new Dictionary<Emotion, List<Tag>>();
+
+        var allEmotions = GetAllEmotions(userId);
+        var allTags = GetAllTags(userId);
+
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = @"
+            SELECT e.name AS emotionName, t.name AS tagName, COUNT(*) as count
+            FROM moodEntries m
+            JOIN emotionEntries ee ON m.moodEntryId = ee.moodEntryId
+            JOIN tagEntries te ON m.moodEntryId = te.moodEntryId
+            JOIN emotions e ON ee.emotionId = e.emotionId
+            JOIN tags t ON te.tagId = t.tagId
+            WHERE m.userId = $uid
+            GROUP BY e.name, t.name
+            ORDER BY e.name, count DESC";
+        cmd.Parameters.AddWithValue("$uid", userId);
+
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            string emotionName = reader.GetString(0);
+            string tagName = reader.GetString(1);
+
+            // Находим соответствующие Emotion и Tag
+            var emotion = allEmotions.FirstOrDefault(e => e.Name == emotionName);
+            var tag = allTags.FirstOrDefault(t => t.Name == tagName);
+
+            // Пропускаем, если что-то не найдено
+            if (emotion == null || tag == null)
+                continue;
+
+            // Добавляем к результату
+            if (!result.ContainsKey(emotion))
+                result[emotion] = new List<Tag>();
+
+            if (!result[emotion].Any(t => t.TagId == tag.TagId))
+                result[emotion].Add(tag);
+        }
+
+        return result;
+    }
+
+
+    public static StatisticsModel GetStatistics(int userId)
+    {
+        var model = new StatisticsModel();
+        using var connection = new SqliteConnection(connectionString);
+        connection.Open();
+
+        var now = DateTime.UtcNow;
+        var today = now.Date;
+        var weekAgo = now.AddDays(-7);
+        var monthAgo = now.AddMonths(-1);
+
+        model.TotalRecords = ExecuteCount(connection, userId, null, null);
+        model.RecordsToday = ExecuteCount(connection, userId, today, now);
+        model.RecordsThisWeek = ExecuteCount(connection, userId, weekAgo, now);
+        model.RecordsThisMonth = ExecuteCount(connection, userId, monthAgo, now);
+
+        model.EmotionCounts = GetEmotionFrequency(connection, userId);
+
+        model.TopEmotionWeek = GetTopEmotion(connection, userId, weekAgo, now);
+        model.TopEmotionMonth = GetTopEmotion(connection, userId, monthAgo, now);
+
+        model.TopEmotions = GetTopEmotions(connection, userId, 5);
+        model.TopTags = GetTopTags(connection, userId, 5);
+
+        model.EmotionTagCorrelation = GetEmotionTagCorrelation(connection, userId);
+
+        return model;
+    }
+
 
     // public static string GetAllMoodEntriesDebug()
     // {

@@ -22,6 +22,8 @@
     }
 
     .records-page .emotions-tags-scroll-box {
+        display: flex;
+        gap: 10px;
         overflow-x: auto;
         margin: 8px 0;
     }
@@ -46,6 +48,18 @@
         border: 1px solid black;
     }
 
+    .records-page .record-title {
+        font-family: 'Comic Sans MS','Courier New', cursive;
+        font-size: 20px;
+        font-weight: bold;
+        @* margin-right: 10px; *@
+    }
+
+    .records-page span {
+        font-family: 'Comic Sans MS','Courier New', cursive;
+        font-size: 15px;
+    }
+
 
 </style>
 
@@ -64,36 +78,27 @@
         } else {
             <div class="records-scroll-box" id="recordsBox">
                 @foreach (var record in Model.AllRecords) {
-                    var fullText = record.Description;
-                    var firstSentence = fullText.Split(".").FirstOrDefault()?.Trim();
-
-                    string shortText;
-                    if (!string.IsNullOrWhiteSpace(firstSentence)) 
-                        shortText = firstSentence;
-                    else {
-                        var words = fullText.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                        shortText = string.Join(" ", words.Take(10));
-                    }
-
                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
-                        <span>@record.Title</span>
+                        <span class="record-title">@record.Title</span>
                         <div>
-                            <button>Edit</button>
+                            <a href="/Diary/DiaryMain?formId=@record.MoodEntryId">
+                                <button type="button">Edit</button>
+                            </a>
                             <button>Delete</button>
                         </div>
                     </div>
                     
-                    <label>@shortText</label>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
+                    <label>@record.Description</label>
+                    <div style="display: flex; align-items: center; gap: 10px; padding: 8px 0;">
                         <span>Primary emotion:</span>
-                        @if (Model.EmotionMap.TryGetValue(record.PrimaryEmotionId, out var primaryEmotion)) {
+                        @if (Model.EmotionMap.TryGetValue(record.PrimaryEmotionId.Value, out var primaryEmotion)) {
                             <div class="emotion" style="background-color: @primaryEmotion.Color">
                                 #@primaryEmotion.Name
                             </div>
                         }    
                     </div>
 
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
+                    <div style="display: flex; align-items: center; gap: 10px; padding: 8px 0;">
                         <span>Emotions:</span>
                         <div class="emotions-tags-scroll-box" id="emotionsBox">
                             @foreach (var emotionId in record.SelectedEmotionsIds) {
@@ -106,7 +111,7 @@
                         </div>
                     </div>
 
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
+                    <div style="display: flex; align-items: center; gap: 10px; padding: 8px 0;">
                         <span>Tags:</span>
                         <div class="emotions-tags-scroll-box" id="tagsBox">
                             @foreach (var tagId in record.SelectedTagsIds) {
@@ -120,11 +125,12 @@
                     </div>
 
                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
-                        <span>@record.RecordDate</span>
+                        <span>@record.RecordDate.ToString("dd MMMM yyyy", System.Globalization.CultureInfo.InvariantCulture)</span>
                         <div>
                             <button>View</button>
                         </div>
                     </div>
+                    <hr>
                 }
             </div>
         }

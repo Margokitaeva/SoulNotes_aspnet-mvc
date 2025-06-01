@@ -8,9 +8,9 @@ namespace SoulNotes.Models
         public int MoodEntryId { get; set; }
         [Required(ErrorMessage = "Write a title please")]
         public string Title { get; set; } = "";
-        public string Description { get; set; } = "";
+        public string? Description { get; set; } = "";
         [Required(ErrorMessage = "Select a primary emotion please")]
-        public int PrimaryEmotionId { get; set; }
+        public int? PrimaryEmotionId { get; set; }
         public List<int> SelectedEmotionsIds { get; set; } = new();
         public List<int> SelectedTagsIds { get; set; } = new();
 

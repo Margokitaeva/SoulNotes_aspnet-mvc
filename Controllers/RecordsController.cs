@@ -19,7 +19,7 @@ namespace SoulNotes.Controllers
             var allTags = DataBaseService.GetAllTags(userId.Value);
             model.EmotionMap = allEmotions.ToDictionary(e => e.EmotionId);
             model.TagMap = allTags.ToDictionary(e => e.TagId);
-
+            
             // var allEntries = DataBaseService.GetAllMoodEntriesDebug();
             // ViewData["Debug"] = allEntries;
             return View(model);
