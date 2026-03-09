@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
+using SoulNotes.Services;
 
 namespace SoulNotes.Controllers
 {
@@ -8,10 +9,10 @@ namespace SoulNotes.Controllers
         public IActionResult UserManagement()
         {
             var userId = HttpContext.Session.GetInt32("UserId");
-            if (userId == null || !DataBaseService.IsUserAdmin(userId.Value))
+            if (userId == null || !UserService.IsUserAdmin(userId.Value))
                 return RedirectToAction("Login", "Account");
 
-            var users = DataBaseService.GetAllUsers();
+            var users = UserService.GetAllUsers();
             ViewBag.Users = users;
             return View();
         }
@@ -20,10 +21,10 @@ namespace SoulNotes.Controllers
         public IActionResult CreateUser(string login, string password)
         {
             var userId = HttpContext.Session.GetInt32("UserId");
-            if (userId == null || !DataBaseService.IsUserAdmin(userId.Value))
+            if (userId == null || !UserService.IsUserAdmin(userId.Value))
                 return RedirectToAction("Login", "Account");
 
-            DataBaseService.CreateUser(login, password);
+            UserService.CreateUser(login, password);
             return RedirectToAction("UserManagement");
         }
     }

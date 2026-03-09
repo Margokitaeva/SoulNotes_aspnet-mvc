@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using SoulNotes.Models;
+using SoulNotes.Services;
 
 namespace SoulNotes.Controllers
 {
@@ -15,8 +16,8 @@ namespace SoulNotes.Controllers
 
             var model = new NewEmotionsTagsViewModel
             {
-                Emotions = DataBaseService.GetAllEmotions(userId.Value),
-                Tags = DataBaseService.GetAllTags(userId.Value)
+                Emotions = EmotionService.GetAllEmotions(userId.Value),
+                Tags = TagService.GetAllTags(userId.Value)
             };
 
             return View(model);
@@ -31,25 +32,25 @@ namespace SoulNotes.Controllers
 
             if (ActionType == "emotion_add" && !string.IsNullOrWhiteSpace(form.CustomEmotionName))
             {
-                DataBaseService.AddEmotion(form.CustomEmotionName, form.CustomEmotionColor ?? "#cccccc", userId.Value);
+                EmotionService.AddEmotion(form.CustomEmotionName, form.CustomEmotionColor ?? "#cccccc", userId.Value);
                 return RedirectToAction("EmotionsTags");
             }
             if (ActionType == "tag_add" && !string.IsNullOrWhiteSpace(form.CustomTagName))
             {
-                DataBaseService.AddTag(form.CustomTagName, userId.Value);
+                TagService.AddTag(form.CustomTagName, userId.Value);
                 return RedirectToAction("EmotionsTags");
             }
 
             if (ActionType == "emotion_delete")
             {
                 foreach (var emotionId in form.EmotionIdsToDelete)
-                    DataBaseService.DeleteEmotion(emotionId, userId.Value);
+                    EmotionService.DeleteEmotion(emotionId, userId.Value);
             }
 
             if (ActionType == "tag_delete")
             {
                 foreach (var tagId in form.TagIdsToDelete)
-                    DataBaseService.DeleteTag(tagId, userId.Value);
+                    TagService.DeleteTag(tagId, userId.Value);
             }
 
             return RedirectToAction("EmotionsTags");

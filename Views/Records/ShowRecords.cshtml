@@ -52,7 +52,6 @@
         font-family: 'Comic Sans MS','Courier New', cursive;
         font-size: 20px;
         font-weight: bold;
-        @* margin-right: 10px; *@
     }
 
     .records-page span {
@@ -64,12 +63,6 @@
 </style>
 
 <div class="records-page">
-    @* @if (ViewData["Debug"] != null)
-    {
-        <div style="background-color: #f0f0f0; padding: 10px; border: 1px dashed gray; margin-bottom: 20px;">
-            @Html.Raw(ViewData["Debug"])
-        </div>
-    } *@
     <h2 style="font-family: 'Comic Sans MS', cursive;">My records</h2>
 
     <form asp-action="ShowRecords" method="post" id="records">
@@ -129,9 +122,6 @@
 
                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
                         <span>@record.RecordDate.ToString("dd MMMM yyyy", System.Globalization.CultureInfo.InvariantCulture)</span>
-                        @* <div>
-                            <button>View</button>
-                        </div> *@
                     </div>
                     <hr>
                 }

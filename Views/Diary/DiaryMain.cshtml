@@ -105,16 +105,13 @@
 
         <label>Choose tag(s) that assosiate width your situation:</label>
         <div class="scroll-box" id="tagsBox">
-            @* <p style="color: gray;">Tags count: @Model.Tags?.Count</p> *@
             @foreach (var tag in Model.Tags) {
                 <div class="tag" data-id="@tag.TagId">#@tag.Name</div>
             }
         </div>
 
-        @* <input type="hidden" name="Form.PrimaryEmotionId" id="primaryEmotionInput" /> *@
         <input type="hidden" name="Form.PrimaryEmotionId" id="primaryEmotionInput" value="@Model.Form.PrimaryEmotionId" />
 
-        @* <div id="selectedEmotionsInputs"></div> *@
         <div id="selectedEmotionsInputs">
             @if (Model.Form.SelectedEmotionsIds != null)
             {
@@ -125,7 +122,6 @@
             }
         </div>
 
-        @* <div id="selectedTagsInputs"></div> *@
         <div id="selectedTagsInputs">
             @if (Model.Form.SelectedTagsIds != null)
             {
@@ -209,7 +205,6 @@
         });
     });
 
-    // Подсветка уже выбранных эмоций
     const initialSelectedEmotions = new Set(
         Array.from(document.querySelectorAll('#selectedEmotionsInputs input'))
               .map(input => input.value)
@@ -223,7 +218,6 @@
         }
     });
 
-    // Подсветка уже выбранных тегов
     const initialSelectedTags = new Set(
         Array.from(document.querySelectorAll('#selectedTagsInputs input'))
               .map(input => input.value)
@@ -236,7 +230,6 @@
         }
     });
 
-    // Подсветка выбранной primary emotion
     const currentPrimaryEmotionId = document.getElementById('primaryEmotionInput').value;
     console.log("PrimaryEmotionInput value:", currentPrimaryEmotionId);
     document.querySelectorAll('#primaryEmotionBox .emotion').forEach(el => {

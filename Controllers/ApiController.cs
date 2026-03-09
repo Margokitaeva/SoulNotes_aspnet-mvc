@@ -1,9 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using SoulNotes.Models;
+using SoulNotes.Services;
 using System.Linq;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api")]
 public class ApiController : ControllerBase
 {
     [HttpGet("records")]
@@ -12,11 +13,11 @@ public class ApiController : ControllerBase
         if (!AuthService.Validate(login, token))
             return Unauthorized("Invalid token");
 
-        int? userId = DataBaseService.GetUserIdByLogin(login);
+        int? userId = UserService.GetUserIdByLogin(login);
         if (userId == null)
             return NotFound("User not found");
 
-        var records = DataBaseService.GetAllRecords(userId.Value);
+        var records = RecordService.GetAllRecords(userId.Value);
         return Ok(records);
     }
 
@@ -26,11 +27,11 @@ public class ApiController : ControllerBase
         if (!AuthService.Validate(login, token))
             return Unauthorized("Invalid token");
 
-        int? userId = DataBaseService.GetUserIdByLogin(login);
+        int? userId = UserService.GetUserIdByLogin(login);
         if (userId == null)
             return NotFound("User not found");
 
-        long id = DataBaseService.AddMoodEntry(
+        long id = RecordService.AddMoodEntry(
             model.Title,
             model.Description,
             model.PrimaryEmotionId.Value,
@@ -47,11 +48,11 @@ public class ApiController : ControllerBase
         if (!AuthService.Validate(login, token))
             return Unauthorized("Invalid token");
 
-        int? userId = DataBaseService.GetUserIdByLogin(login);
+        int? userId = UserService.GetUserIdByLogin(login);
         if (userId == null)
             return NotFound("User not found");
 
-        var emotions = DataBaseService.GetAllEmotions(userId.Value);
+        var emotions = EmotionService.GetAllEmotions(userId.Value);
         return Ok(emotions);
     }
 
@@ -61,11 +62,11 @@ public class ApiController : ControllerBase
         if (!AuthService.Validate(login, token))
             return Unauthorized("Invalid token");
 
-        int? userId = DataBaseService.GetUserIdByLogin(login);
+        int? userId = UserService.GetUserIdByLogin(login);
         if (userId == null)
             return NotFound("User not found");
 
-        DataBaseService.AddEmotion(emotion.Name, emotion.Color, userId.Value);
+        EmotionService.AddEmotion(emotion.Name, emotion.Color, userId.Value);
         return Ok("Emotion added.");
     }
 
@@ -75,11 +76,11 @@ public class ApiController : ControllerBase
         if (!AuthService.Validate(login, token))
             return Unauthorized("Invalid token");
 
-        int? userId = DataBaseService.GetUserIdByLogin(login);
+        int? userId = UserService.GetUserIdByLogin(login);
         if (userId == null)
             return NotFound("User not found");
 
-        DataBaseService.DeleteEmotion(id, userId.Value);
+        EmotionService.DeleteEmotion(id, userId.Value);
         return Ok("Emotion deleted.");
     }
 
@@ -89,11 +90,11 @@ public class ApiController : ControllerBase
         if (!AuthService.Validate(login, token))
             return Unauthorized("Invalid token");
 
-        int? userId = DataBaseService.GetUserIdByLogin(login);
+        int? userId = UserService.GetUserIdByLogin(login);
         if (userId == null)
             return NotFound("User not found");
 
-        var tags = DataBaseService.GetAllTags(userId.Value);
+        var tags = TagService.GetAllTags(userId.Value);
         return Ok(tags);
     }
 
@@ -103,11 +104,11 @@ public class ApiController : ControllerBase
         if (!AuthService.Validate(login, token))
             return Unauthorized("Invalid token");
 
-        int? userId = DataBaseService.GetUserIdByLogin(login);
+        int? userId = UserService.GetUserIdByLogin(login);
         if (userId == null)
             return NotFound("User not found");
 
-        DataBaseService.AddTag(tag.Name, userId.Value);
+        TagService.AddTag(tag.Name, userId.Value);
         return Ok("Tag added.");
     }
 
@@ -117,11 +118,11 @@ public class ApiController : ControllerBase
         if (!AuthService.Validate(login, token))
             return Unauthorized("Invalid token");
 
-        int? userId = DataBaseService.GetUserIdByLogin(login);
+        int? userId = UserService.GetUserIdByLogin(login);
         if (userId == null)
             return NotFound("User not found");
 
-        DataBaseService.DeleteTag(id, userId.Value);
+        TagService.DeleteTag(id, userId.Value);
         return Ok("Tag deleted.");
     }
 }

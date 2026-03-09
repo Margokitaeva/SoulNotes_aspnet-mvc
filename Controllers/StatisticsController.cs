@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using SoulNotes.Models;
+using SoulNotes.Services;
 
 namespace SoulNotes.Controllers
 {
@@ -13,7 +14,7 @@ namespace SoulNotes.Controllers
             if (userId == null)
                 return RedirectToAction("Login", "Account");
 
-            var stats = DataBaseService.GetStatistics(userId.Value);
+            var stats = StatisticsService.GetStatistics(userId.Value);
             var model = new StatisticsViewModel { Stats = stats };
 
             return View(model);

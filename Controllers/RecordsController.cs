@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using SoulNotes.Models;
+using SoulNotes.Services;
 
 namespace SoulNotes.Controllers
 {
@@ -14,14 +15,12 @@ namespace SoulNotes.Controllers
                 return RedirectToAction("Login", "Account");
 
             var model = new Records();
-            model.AllRecords = DataBaseService.GetAllRecords(userId.Value);
-            var allEmotions = DataBaseService.GetAllEmotions(userId.Value);
-            var allTags = DataBaseService.GetAllTags(userId.Value);
+            model.AllRecords = RecordService.GetAllRecords(userId.Value);
+            var allEmotions = EmotionService.GetAllEmotions(userId.Value);
+            var allTags = TagService.GetAllTags(userId.Value);
             model.EmotionMap = allEmotions.ToDictionary(e => e.EmotionId);
             model.TagMap = allTags.ToDictionary(e => e.TagId);
 
-            // var allEntries = DataBaseService.GetAllMoodEntriesDebug();
-            // ViewData["Debug"] = allEntries;
             return View(model);
         }
 
@@ -32,7 +31,7 @@ namespace SoulNotes.Controllers
             if (userId == null)
                 return RedirectToAction("Login", "Account");
 
-            DataBaseService.DeleteRecord(moodEntryId, userId.Value);
+            RecordService.DeleteRecord(moodEntryId, userId.Value);
             return RedirectToAction("ShowRecords");
         }
     }

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
+using SoulNotes.Services;
 
 namespace SoulNotes.Controllers {
     public class AccountController : Controller
@@ -20,9 +21,9 @@ namespace SoulNotes.Controllers {
                 ViewBag.Error = "Please provide both password and login";
                 return View();
             }
-            if (DataBaseService.ValidateLogin(provided_login, provided_password))
+            if (UserService.ValidateLogin(provided_login, provided_password))
             {
-                var userId = DataBaseService.GetUserId(provided_login);
+                var userId = UserService.GetUserId(provided_login);
                 if (userId != null)
                 {
                     HttpContext.Session.SetInt32("UserId", userId.Value);
