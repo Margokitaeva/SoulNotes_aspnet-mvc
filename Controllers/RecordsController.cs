@@ -19,12 +19,21 @@ namespace SoulNotes.Controllers
             var allTags = DataBaseService.GetAllTags(userId.Value);
             model.EmotionMap = allEmotions.ToDictionary(e => e.EmotionId);
             model.TagMap = allTags.ToDictionary(e => e.TagId);
-            
+
             // var allEntries = DataBaseService.GetAllMoodEntriesDebug();
             // ViewData["Debug"] = allEntries;
             return View(model);
         }
 
-        // [HttpPost]
+        [HttpPost]
+        public IActionResult DeleteRecord(int moodEntryId)
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
+                return RedirectToAction("Login", "Account");
+
+            DataBaseService.DeleteRecord(moodEntryId, userId.Value);
+            return RedirectToAction("ShowRecords");
+        }
     }
 }

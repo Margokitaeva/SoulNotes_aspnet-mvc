@@ -26,9 +26,14 @@ app.Use(async (context, next) =>
 {
     var path = context.Request.Path;
 
-    if (!path.StartsWithSegments("/Account/Login") &&
-        !path.StartsWithSegments("/css") &&
-        context.Session.GetInt32("UserId") == null)
+    if (path.StartsWithSegments("/api"))
+    {
+        await next();
+        return;
+    }
+
+    if (!path.StartsWithSegments("/Account/Login") && !path.StartsWithSegments("/css")
+                                        && context.Session.GetInt32("UserId") == null)
     {
         context.Response.Redirect("/Account/Login");
         return;

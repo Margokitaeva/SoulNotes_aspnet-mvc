@@ -25,7 +25,8 @@ public static class DataBaseService
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             login TEXT NOT NULL,
             password TEXT NOT NULL,
-            isAdmin INTEGER DEFAULT 0
+            isAdmin INTEGER DEFAULT 0, 
+            token TEXT NOT NULL
             );";
         cmd.ExecuteNonQuery();
 
@@ -85,12 +86,12 @@ public static class DataBaseService
         if (count == 0)
         {
             string hashedPassword = ComputeMD5Hash("Mercy");
-            cmd.CommandText = "INSERT INTO users (login, password) VALUES ('Playlist', $password);";
+            cmd.CommandText = "INSERT INTO users (login, password, token) VALUES ('Playlist', $password, 'playlist');";
             cmd.Parameters.AddWithValue("$password", hashedPassword);
             cmd.ExecuteNonQuery();
             cmd.Parameters.Clear();
 
-            cmd.CommandText = "INSERT INTO users (login, password, isAdmin) VALUES ('admin', $password, 1);";
+            cmd.CommandText = "INSERT INTO users (login, password, isAdmin, token) VALUES ('admin', $password, 1, 'admin');";
             cmd.Parameters.AddWithValue("$password", ComputeMD5Hash("admin"));
             cmd.ExecuteNonQuery();
             cmd.Parameters.Clear();
@@ -301,7 +302,6 @@ public static class DataBaseService
 
     public static long AddMoodEntry(string title, string description, int primaryEmotionId, int userId, DateTime recordDate)
     {
-        Console.WriteLine("Adding mood entry: " + title + " / " + userId + " / " + recordDate);
         using var connection = new SqliteConnection(connectionString);
         connection.Open();
 
@@ -454,9 +454,11 @@ public static class DataBaseService
         connection.Open();
 
         var cmd = connection.CreateCommand();
-        cmd.CommandText = "INSERT INTO users (login, password) VALUES ($login, $password);";
+        cmd.CommandText = "INSERT INTO users (login, password, token) VALUES ($login, $password, $token);";
         cmd.Parameters.AddWithValue("$login", login);
         cmd.Parameters.AddWithValue("$password", ComputeMD5Hash(password));
+        string token = Guid.NewGuid().ToString();
+        cmd.Parameters.AddWithValue("$token", token);
         cmd.ExecuteNonQuery();
     }
 
@@ -488,18 +490,19 @@ public static class DataBaseService
         if (start != null)
         {
             cmd.CommandText += " AND recordDate >= $start";
-            cmd.Parameters.AddWithValue("$start", start.Value.ToString("s"));
+            cmd.Parameters.AddWithValue("$start", start.Value.ToString("yyyy-MM-dd"));
         }
         if (end != null)
         {
             cmd.CommandText += " AND recordDate <= $end";
-            cmd.Parameters.AddWithValue("$end", end.Value.ToString("s"));
+            cmd.Parameters.AddWithValue("$end", end.Value.ToString("yyyy-MM-dd"));
         }
 
         return Convert.ToInt32(cmd.ExecuteScalar());
     }
 
-    public static Dictionary<string, int> GetEmotionFrequency(SqliteConnection conn, int userId) {
+    public static Dictionary<string, int> GetEmotionFrequency(SqliteConnection conn, int userId)
+    {
         var result = new Dictionary<string, int>();
 
         using var cmd = conn.CreateCommand();
@@ -524,7 +527,8 @@ public static class DataBaseService
         return result;
     }
 
-    public static string GetTopEmotion(SqliteConnection conn, int userId, DateTime from, DateTime to) {
+    public static string GetTopEmotion(SqliteConnection conn, int userId, DateTime from, DateTime to)
+    {
         using var cmd = conn.CreateCommand();
         cmd.CommandText = @"
             SELECT e.name, COUNT(*) as count
@@ -542,7 +546,7 @@ public static class DataBaseService
         using var reader = cmd.ExecuteReader();
         return reader.Read() ? reader.GetString(0) : "-";
     }
-    
+
     public static List<Emotion> GetTopEmotions(SqliteConnection conn, int userId, int limit)
     {
         var result = new List<Emotion>();
@@ -679,6 +683,62 @@ public static class DataBaseService
         model.EmotionTagCorrelation = GetEmotionTagCorrelation(connection, userId);
 
         return model;
+    }
+
+    public static User GetUserByLogin(string login)
+    {
+        using var connection = new SqliteConnection(connectionString);
+        connection.Open();
+
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT id, login, password, token FROM users WHERE login = $login";
+        cmd.Parameters.AddWithValue("$login", login);
+
+        using var reader = cmd.ExecuteReader();
+        if (reader.Read())
+        {
+            return new User
+            {
+                Id = reader.GetInt32(0),
+                Login = reader.GetString(1),
+                Password = reader.GetString(2),
+                Token = reader.IsDBNull(3) ? null : reader.GetString(3)
+            };
+        }
+
+        return null;
+    }
+
+    public static int? GetUserIdByLogin(string login)
+    {
+        using var connection = new SqliteConnection(connectionString);
+        connection.Open();
+
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT id FROM users WHERE login = $login";
+        cmd.Parameters.AddWithValue("$login", login);
+
+        var result = cmd.ExecuteScalar();
+        if (result != null)
+            return Convert.ToInt32(result);
+
+        return null;
+    }
+
+    public static void DeleteRecord(int moodEntryId, int userId)
+    {
+        using var connection = new SqliteConnection(connectionString);
+        connection.Open();
+
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+            DELETE FROM emotionEntries WHERE moodEntryId = $id;
+            DELETE FROM tagEntries WHERE moodEntryId = $id;
+            DELETE FROM moodEntries WHERE moodEntryId = $id AND userId = $userId;
+        ";
+        cmd.Parameters.AddWithValue("$id", moodEntryId);
+        cmd.Parameters.AddWithValue("$userId", userId);
+        cmd.ExecuteNonQuery();
     }
 
 
