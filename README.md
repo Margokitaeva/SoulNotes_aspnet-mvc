@@ -1,22 +1,33 @@
 # SoulNotes
 
-SoulNotes is a web application for emotion journaling built with **C#**, **ASP.NET Core MVC**, **Razor Views**, and **SQLite**.
+SoulNotes is an emotion journaling application built with **C#**, **ASP.NET Core MVC**, **Razor Views**, and **SQLite**.
+
+The solution consists of:
+- a **web application** with a server-rendered user interface,
+- a **REST API** for working with records, emotions, and tags,
+- and a **console client** that consumes the API.
 
 The application allows users to create diary records, assign emotions and tags, manage their own emotion/tag lists, and view simple emotional statistics over time.
 
 ## Architecture
 
-SoulNotes is built as a server-rendered ASP.NET Core MVC application.
-The web interface uses Razor Views and session-based authentication.
-The project also exposes a simple REST API secured with login + token validation.
-Data is stored in a local SQLite database and accessed through custom C# services using Microsoft.Data.Sqlite.
+SoulNotes is built as a multi-project .NET solution.
+
+The main web application is a server-rendered **ASP.NET Core MVC** project using **Razor Views** and **session-based authentication** for the browser interface.
+
+The application also exposes a simple **REST API** secured with **login + token validation**.
+
+A separate **console client** communicates with the API over HTTP and allows basic management of emotions and tags from the command line.
+
+Data is stored in a local **SQLite** database and accessed through custom C# services using **Microsoft.Data.Sqlite**.
+
 
 ## Features
 
+### Web Application
 - User login and logout
 - Session-based authentication for the web interface
-- Token-based authentication for REST API access
-- Create, view and delete diary records
+- Create, view, and delete diary records
 - Assign one primary emotion and multiple additional emotions to each record
 - Assign tags to records
 - Add custom emotions and tags
@@ -30,31 +41,55 @@ Data is stored in a local SQLite database and accessed through custom C# service
   - emotion-tag correlation
 - Admin page for creating new users
 
+### REST API
+- Retrieve records
+- Create records
+- Retrieve emotions
+- Add emotions
+- Delete emotions
+- Retrieve tags
+- Add tags
+- Delete tags
+
+### Console Client
+- Connects to the REST API
+- Authenticates using login + token
+- Displays emotions and tags
+- Adds new emotions and tags
+- Deletes emotions and tags
+- Demonstrates API consumption from a separate client application
+
 ## Tech Stack
 
+- **Language:** C#
 - **Backend:** ASP.NET Core MVC (.NET 7)
 - **Frontend:** Razor Views, HTML, CSS, JavaScript
 - **Database:** SQLite
-- **Data access:** `Microsoft.Data.Sqlite`
+- **Data access:** Microsoft.Data.Sqlite
+- **API:** REST API
 - **Authentication:**
   - Session-based for web pages
-  - Token-based for API endpoints
+  - Token-based for API access
+- **Client application:** .NET Console Application
 
 ## Project Structure
 
 ```text
 SoulNotes/
-├── Controllers/         # MVC controllers and API endpoints
-├── Models/              # Domain models and view models
-├── Services/            # Database, authentication, user, record, emotion, tag, and statistics services
-├── Views/               # Razor views
-├── wwwroot/             # Static files
-├── AppData.db           # SQLite database
-├── Program.cs           # Application entry point and middleware configuration
-├── SoulNotes.csproj     # .NET project file
-└── SoulNotes.sln        # Visual Studio solution
+├── ConsoleClient/      # Console client consuming the SoulNotes REST API
+├── SoulNotes/          # Main ASP.NET Core MVC web application
+│   ├── Controllers/    # MVC controllers and API endpoints
+│   ├── Models/         # Domain models and view models
+│   ├── Services/       # Database, authentication, and application services
+│   ├── Views/          # Razor views
+│   ├── wwwroot/        # Static files
+│   ├── AppData.db      # SQLite database
+│   ├── Program.cs      # Application entry point and middleware configuration
+│   └── SoulNotes.csproj
+├── SoulNotes.sln       # Solution containing both projects
+├── README.md
+└── .gitignore
 ```
-
 
 ## Main Pages
 - Login — user authentication
@@ -93,20 +128,28 @@ Examples:
 - `POST /api/tags`
 - `DELETE /api/tags/{id}`
 
-API access requires:
-- login
-- token
+API access requires user login and token validation.
+
+In the current implementation, the token is passed with the request and verified against the value stored for the user in the database.
 
 ## How to Run
 Requirements:
 - `.NET 7 SDK`
 
-Run locally:
+### 1. Run the web application
+From the solution root:
 ```shell
-dotnet restore
-dotnet build
-dotnet run
+dotnet run --project SoulNotes/SoulNotes.csproj
 ```
+The application will start on a local ASP.NET Core address shown in the console.
+
+### 2. Run the console client
+
+Open a second terminal and run:
+```shell
+dotnet run --project ConsoleClient/ConsoleClient.csproj
+```
+Make sure the web application is already running before starting the console client.
 
 ## Default Data
 
@@ -130,6 +173,8 @@ It demonstrates:
 - SQLite integration
 - form validation
 - basic statistics generation
+- communication between a web application and a separate console API client
+
 
 ## Possible Improvements
 
