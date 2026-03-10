@@ -1,0 +1,153 @@
+@{
+    ViewData["Title"] = "My emotions and tags";
+}
+
+<style>
+    .emotions-tags-page input[type="text"], textarea {
+        width: 100%;
+        padding: 8px;
+        font-family: 'Comic Sans MS','Courier New', cursive;
+        margin-bottom: 12px;
+        border: 1px solid black;
+        font-size: 15px;
+    }
+
+    .emotions-tags-page label {
+        font-family: 'Comic Sans MS','Courier New', cursive;
+        font-weight: bold;
+        display: block;
+        margin-top: 10px;
+    }
+
+    .emotions-tags-page .scroll-box {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .emotions-tags-page .tag, .emotion {
+        padding: 6px 10px;
+        border-radius: 15px;
+        white-space: nowrap;
+        font-family: 'Comic Sans MS','Courier New', cursive;
+        cursor: pointer;
+        border: 1px solid black;
+    }
+
+    .emotions-tags-page .selected {
+        outline: 2px solid black;
+    }
+
+    .emotions-tags-page button {
+        font-family: 'Comic Sans MS', cursive;
+        font-size: 16px;
+        padding: 8px 20px;
+        cursor: pointer;
+    }
+
+    .emotions-tags-page button[value$="_delete"] {
+        margin-top: 20px;
+    }
+
+    .emotions-tags-page .add-button { 
+        vertical-align: middle;
+    }
+
+</style>
+
+<div class="emotions-tags-page">
+    <h2 style="font-family: 'Comic Sans MS', cursive;">My emotions and tags</h2>
+
+    <form asp-action="EmotionsTags" method="post" id="emotionsTagsForm">
+        <label>Add your own emotion if you want and pick colour for it...</label>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <input type="text" name="CustomEmotionName" placeholder="new emotion name" />
+            <input type="color" name="CustomEmotionColor" value="#cccccc" />
+            <button class="add-button" type="submit" name="ActionType" value="emotion_add">Add</button>
+        </div>
+
+        <label>Choose emotion(s) you want to delete:</label>
+        <div class="scroll-box" id="emotionsBox">
+            @foreach (var emotion in Model.Emotions)
+            {
+                <div class="emotion" style="background-color: @emotion.Color;" data-id="@emotion.EmotionId">
+                    #@emotion.Name
+                </div>
+            }
+        </div>
+        <button type="submit" name="ActionType" value="emotion_delete">Delete</button>
+
+        <hr>
+
+        <label>Add your own tag if you want</label>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <input type="text" name="customTagName" placeholder="#new tag name" />
+            <button class="add-button" type="submit" name="ActionType" value="tag_add">Add</button>
+        </div>
+
+        <label>Choose tag(s) you want to delete:</label>
+        <div class="scroll-box" id="tagsBox">
+            @foreach (var tag in Model.Tags) {
+                <div class="tag" data-id="@tag.TagId">#@tag.Name</div>
+            }
+        </div>
+        <button type="submit" name="ActionType" value="tag_delete">Delete</button>
+
+        <div id="selectedEmotionsInputs"></div>
+        <div id="selectedTagsInputs"></div>
+
+    </form>
+</div>
+
+<script>
+    const selectedEmotions = new Set();
+    const selectedTags = new Set();
+
+    document.querySelectorAll('#emotionsBox .emotion').forEach(el => {
+        el.addEventListener('click', () => {
+            const id = el.dataset.id;
+            el.classList.toggle('selected');
+            selectedEmotions.has(id) ? selectedEmotions.delete(id) : selectedEmotions.add(id);
+        });
+    });
+
+    document.querySelectorAll('#tagsBox .tag').forEach(el => {
+        el.addEventListener('click', () => {
+            const id = el.dataset.id;
+            el.classList.toggle('selected');
+            selectedTags.has(id) ? selectedTags.delete(id) : selectedTags.add(id);
+        });
+    });
+
+    document.getElementById('emotionsTagsForm').addEventListener('submit', (e) => {
+        const clickedButton = document.activeElement;
+        const actionType = clickedButton?.value;
+
+        const emotionInputs = document.getElementById('selectedEmotionsInputs');
+        const tagInputs = document.getElementById('selectedTagsInputs');
+        emotionInputs.innerHTML = '';
+        tagInputs.innerHTML = '';
+
+        if (actionType === "emotion_delete") {
+            selectedEmotions.forEach(id => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'EmotionIdsToDelete';
+                input.value = id;
+                emotionInputs.appendChild(input);
+            });
+        }
+
+        if (actionType === "tag_delete") {
+            selectedTags.forEach(id => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'TagIdsToDelete';
+                input.value = id;
+                tagInputs.appendChild(input);
+            });
+        }
+
+    });
+
+</script>
